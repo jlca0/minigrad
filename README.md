@@ -18,7 +18,6 @@ $$L(\theta) = \frac{1}{N}\mathbf{1}^{\intercal}\Big[\big(Y - \hat{Y}\big) \odot 
 Cross-entropy function (CE): 
 $$L(\theta) = -\frac{1}{N}\mathbf{1}^{\intercal}\Big[Y \odot \log\big(\hat{Y}\big)\Big]\mathbf{1}$$
 
-```mermaid
 flowchart LR
     classDef turquoise fill:#00E5D1,stroke:#00A896,color:#000;
     classDef orange fill:#FFB703,stroke:#FB8500,color:#000;
@@ -26,28 +25,34 @@ flowchart LR
     classDef red fill:#FF595E,stroke:#C70039,color:#000;
 
     subgraph LayerX [ ]
-        X1(((X1))) ::: turquoise
-        X2(((X2))) ::: turquoise
-        XM(((XM))) ::: turquoise
+        X1((X1))
+        X2((X2))
+        XM((XM))
     end
 
     subgraph LayerZ [ ]
-        Z1(((Z1))) ::: orange
-        Z2(((Z2))) ::: orange
-        ZM(((ZM))) ::: orange
+        Z1((Z1))
+        Z2((Z2))
+        ZM((ZM))
     end
 
     subgraph LayerT [ ]
-        T1(((T1))) ::: pink
-        T2(((T2))) ::: pink
-        TK(((TK))) ::: pink
+        T1((T1))
+        T2((T2))
+        TK((TK))
     end
 
     subgraph LayerY [ ]
-        Y1(((Y1))) ::: red
-        Y2(((Y2))) ::: red
-        YK(((YK))) ::: red
+        Y1((Y1))
+        Y2((Y2))
+        YK((YK))
     end
+
+    %% Asignación de estilos
+    class X1,X2,XM turquoise;
+    class Z1,Z2,ZM orange;
+    class T1,T2,TK pink;
+    class Y1,Y2,YK red;
 
     %% Conexiones X -> Z
     X1 --> Z1 & Z2 & ZM
@@ -63,4 +68,3 @@ flowchart LR
     T1 --> Y1 & Y2 & YK
     T2 --> Y1 & Y2 & YK
     TK --> Y1 & Y2 & YK
-```
