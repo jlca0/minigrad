@@ -42,6 +42,12 @@ def ce(
     ones_N = ag.Tensor(np.ones((N, 1)), label='ones_N')
     return (ones_K @ (Y * logit.softmax().log())) @ ones_N * (-1 / N)
 
+class Linear:
+    def __init__(self, bias: ag.Tensor, weights: ag.Tensor):
+        self.bias = bias
+        self.weight = weights
+    
+
 class NN:
     """
     A class representing a neural network with one hidden layer.
@@ -57,13 +63,17 @@ class NN:
             self, 
             M: int, 
             K: int,
+            H: int,
+            L: int,
             type: str = 'Regression'
             ) -> None:
         """
-        Initializes the neural network with one hidden layer.
+        Initializes the neural network with L hidden layers.
         Args:
             M (int): Number of input features.
             K (int): Number of output classes.
+            H (int): Number of hidden neurons.
+            L (int): Number of layers.
             type (str): Use case for the neural network, e. g., classification or regression.
         Raises:
             ValueError: type must be either Regression or Classification.
@@ -71,12 +81,28 @@ class NN:
         self.M = M
         self.K = K
 
-        # He initialization of weights and biases.
-        self.A = ag.Tensor(np.random.randn(M, M) * np.sqrt(2.0 / M), label='A')
-        self.a0 = ag.Tensor(np.zeros((M, 1)), label='a0')
-        self.B = ag.Tensor(np.random.randn(K, M) * np.sqrt(2.0 / M), label='B')
-        self.b0 = ag.Tensor(np.zeros((K, 1)), label='b0')
+        self.layers = [
+            Linear(
+                bias=ag.Tensor(np.zeros((H, 1))), 
+                weights=ag.Tensor(np.random.randn(H, M) * np.sqrt(2.0 / M), label='A_0')
+            )
+        ]
 
+        for i in range(1, L + 1):
+            self.layers.append(
+                Linear(
+                    bias=ag.Tensor(np.zeros((H, 1))), 
+                    weights=ag.Tensor(np.random.randn(H, H) * np.sqrt(2.0 / H), label=f'A_{i}')
+                )
+            )
+
+        self.layers.append(
+            Linear(
+                bias=ag.Tensor(np.zeros((K, 1))), 
+                weights=ag.Tensor(np.random.randn(K, H) * np.sqrt(2.0 / H), label=f'A_{L+1}')
+            )
+        )
+        
         if type == 'Regression':
             self._loss = partial(lse, K = self.K)
         elif type == 'Classification':
@@ -100,20 +126,28 @@ class NN:
             epochs (int): Number of training epochs.
             learning_rate (float): Learning rate for gradient descent.
         """  
-        params = [self.A, self.a0, self.B, self.b0]
 
         for epoch in range(epochs):
             # forward pass
-            logit = self.B @ (self.A @ X + self.a0).sigmoid() + self.b0
+            out = X
+
+            for layer in self.layers[:-1]:
+                out = (layer.weight @ out + layer.bias).reLU()
+
+            last_layer = self.layers[-1]
+            logit = last_layer.weight @ out + last_layer.bias
             l = self._loss(logit, Y)
             
             # backward pass
             l.backward()
 
             # parameter update
-            for param in params:
-                param.data -= learning_rate * param.grad
-                param.grad = np.zeros_like(param.data)
+            for layer in self.layers:
+                layer.weight.data -= learning_rate * layer.weight.grad
+                layer.weight.grad = np.zeros_like(layer.weight.data)
+                
+                layer.bias.data -= learning_rate * layer.bias.grad
+                layer.bias.grad = np.zeros_like(layer.bias.data)
 
             if verbose and epoch % 10 == 0:
                 print(f"Epoch {epoch} | Loss: {l.data.squeeze():.4f}")
@@ -129,13 +163,21 @@ class NN:
         Returns:
             np.ndarray: Predicted class labels of shape (N,).
         """
-        logit = self.B @ (self.A @ X + self.a0).sigmoid() + self.b0
+        out = X
+
+        for layer in self.layers[:-1]:
+            out = (layer.weight @ out + layer.bias).reLU()
+
+        last_layer = self.layers[-1]
+        logit = last_layer.weight @ out + last_layer.bias
 
         return np.argmax(logit.data, axis=0)
 
 if __name__ == "__main__":
     M = 64  # 8x8 pixels
     K = 10  # Digits from 0 to 9
+    H = 64
+    L = 8 # Five hidden layers
 
     def to_one_hot(y, num_classes=10):
         """
@@ -159,8 +201,8 @@ if __name__ == "__main__":
     Y_train = ag.Tensor(to_one_hot(y_train_raw), label='Y')
 
     # Train.
-    model = NN(M, K, 'Regression')
-    model.train(X_train, Y_train, epochs=500, learning_rate=0.02)
+    model = NN(M, K, H, L, 'Classification')
+    model.train(X_train, Y_train, epochs=500, learning_rate=0.1, verbose=True)
     y_pred = model.predict(X_test)
 
     # Compare.
