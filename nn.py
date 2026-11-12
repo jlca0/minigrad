@@ -50,7 +50,7 @@ class Linear:
 
 class NN:
     """
-    A class representing a neural network with one hidden layer.
+    A class representing a neural network with L hidden layers.
     Attributes:
         M (int): Number of input feature.
         K (int): Number of output classes. 
@@ -119,7 +119,7 @@ class NN:
             verbose: bool = False
             ) -> None:
         """
-        Trains a simple neural network with one hidden layer using backpropagation.
+        Trains the neural network using backpropagation.
         Args:
             X (ag.Tensor): Input data of shape (M, N).
             Y (ag.Tensor): One-hot encoded labels of shape (K, N).
@@ -157,7 +157,7 @@ class NN:
             X: ag.Tensor
             ) -> np.ndarray:
         """
-        Predicts the expected class by the model.
+        Predicts the expected class(or value) by the model.
         Args:
             X (ag.Tensor): Input data of shape (M, N).
         Returns:
