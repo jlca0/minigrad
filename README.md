@@ -19,3 +19,5 @@ Cross-entropy function (CE):
 $$L(\theta) = -\frac{1}{N}\mathbf{1}^{\intercal}\Big[Y \odot \log\big(\hat{Y}\big)\Big]\mathbf{1}$$
 
 ![The neural network](nn.png)
+
+The Multilayer Linear Perceptron, which has been implemented, adds N hidden layers to the model.
